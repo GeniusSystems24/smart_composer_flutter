@@ -9,10 +9,11 @@ import 'composer_icons.dart';
 /// The floating suggestion menu (`.sc-menu`). Rendered by [SmartComposer] inside
 /// an overlay, anchored beneath the editor.
 class SuggestionMenu extends StatelessWidget {
-  const SuggestionMenu({super.key, required this.controller, required this.maxWidth});
+  const SuggestionMenu({super.key, required this.controller, required this.maxWidth, this.maxHeight = 320});
 
   final ComposerController controller;
   final double maxWidth;
+  final double maxHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +22,13 @@ class SuggestionMenu extends StatelessWidget {
     if (!sug.open) return const SizedBox.shrink();
     final trig = sug.trig;
 
-    final width = maxWidth.clamp(0, 340).toDouble();
+    final width = maxWidth.clamp(160.0, 340.0).toDouble();
 
     return Material(
       color: Colors.transparent,
       child: Container(
         width: width,
-        constraints: const BoxConstraints(maxHeight: 320),
+        constraints: BoxConstraints(maxHeight: maxHeight),
         decoration: BoxDecoration(
           color: theme.surface,
           borderRadius: BorderRadius.circular(10),

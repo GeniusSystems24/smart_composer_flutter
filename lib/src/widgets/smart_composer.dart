@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -231,15 +233,15 @@ class _SmartComposerState extends State<SmartComposer> {
       child: OverlayPortal(
         controller: _portalController,
         overlayChildBuilder: (context) {
-          return _MenuFollower(
+          return _SuggestionOverlay(
             link: _link,
-            child: ComposerThemeScope(
-              theme: theme,
-              child: SuggestionMenu(controller: _controller, maxWidth: 340),
-            ),
+            targetKey: _editorKey,
+            controller: _controller,
+            theme: theme,
           );
         },
         child: CompositedTransformTarget(
+          key: _editorKey,
           link: _link,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 240),
@@ -298,23 +300,104 @@ class _SmartComposerState extends State<SmartComposer> {
   }
 
   final LayerLink _link = LayerLink();
+  final GlobalKey _editorKey = GlobalKey();
 }
 
-class _MenuFollower extends StatelessWidget {
-  const _MenuFollower({required this.link, required this.child});
+/// Viewport-aware positioning for the suggestion overlay.
+///
+/// * Anchors to the editor via [LayerLink], so it tracks continuously while any
+///   ancestor scrolls, the keyboard animates, or the composer moves.
+/// * Flips above/below based on available space — below when it fits, otherwise
+///   above; if neither fits it picks the side with more room.
+/// * Clamps left/right/top/bottom into the visible viewport (excluding the
+///   keyboard inset and safe areas) and adapts width + maxHeight to fit.
+/// * The menu body scrolls when the available height is tight.
+///
+/// Recomputes on every metrics change (keyboard open/close, resize, orientation)
+/// because it reads [MediaQuery]; recomputes on suggestion/content changes
+/// because the host rebuilds the overlay child.
+class _SuggestionOverlay extends StatelessWidget {
+  const _SuggestionOverlay({
+    required this.link,
+    required this.targetKey,
+    required this.controller,
+    required this.theme,
+  });
+
   final LayerLink link;
-  final Widget child;
+  final GlobalKey targetKey;
+  final ComposerController controller;
+  final ComposerTheme theme;
+
+  static const double _pad = 8;
+  static const double _gap = 6;
+  static const double _minH = 132;
+  static const double _maxH = 320;
+  static const double _desiredW = 340;
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final screen = media.size;
+    final keyboard = media.viewInsets.bottom;
+    final safe = media.padding;
+
+    // visible viewport bounds (exclude keyboard + safe areas)
+    final viewTop = safe.top + _pad;
+    final viewBottom = screen.height - keyboard - safe.bottom - _pad;
+    final viewLeft = safe.left + _pad;
+    final viewRight = screen.width - safe.right - _pad;
+
+    // editor rect in global coordinates
+    Rect target;
+    final box = targetKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null && box.hasSize) {
+      final tl = box.localToGlobal(Offset.zero);
+      target = tl & box.size;
+    } else {
+      target = Rect.fromLTWH(viewLeft, viewTop, screen.width, 0);
+    }
+
+    final width = math.min(_desiredW, math.max(160.0, viewRight - viewLeft));
+
+    final spaceBelow = viewBottom - target.bottom - _gap;
+    final spaceAbove = target.top - viewTop - _gap;
+
+    bool placeBelow;
+    if (spaceBelow >= _minH) {
+      placeBelow = true;
+    } else if (spaceAbove >= _minH) {
+      placeBelow = false;
+    } else {
+      placeBelow = spaceBelow >= spaceAbove;
+    }
+
+    final avail = math.max(0.0, placeBelow ? spaceBelow : spaceAbove);
+    final maxH = math.max(_minH, math.min(_maxH, avail));
+
+    // horizontal anchor at the editor's left, clamped into the viewport
+    final maxLeft = math.max(viewLeft, viewRight - width);
+    final left = target.left.clamp(viewLeft, maxLeft);
+    final dx = left - target.left;
+
     return Positioned(
-      width: 340,
+      width: width,
       child: CompositedTransformFollower(
         link: link,
-        targetAnchor: Alignment.bottomLeft,
-        followerAnchor: Alignment.topLeft,
-        offset: const Offset(0, 6),
-        child: Align(alignment: Alignment.topLeft, child: child),
+        showWhenUnlinked: false,
+        targetAnchor: placeBelow ? Alignment.bottomLeft : Alignment.topLeft,
+        followerAnchor: placeBelow ? Alignment.topLeft : Alignment.bottomLeft,
+        offset: Offset(dx, placeBelow ? _gap : -_gap),
+        child: Align(
+          alignment: placeBelow ? Alignment.topLeft : Alignment.bottomLeft,
+          child: ComposerThemeScope(
+            theme: theme,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: width, maxHeight: maxH),
+              child: SuggestionMenu(controller: controller, maxWidth: width, maxHeight: maxH),
+            ),
+          ),
+        ),
       ),
     );
   }

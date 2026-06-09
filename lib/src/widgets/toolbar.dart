@@ -97,11 +97,19 @@ class ComposerToolbar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.borderSoft))),
-      child: Wrap(
-        spacing: 4,
-        children: children.where((c) => c is! Spacer).toList(),
-      ),
+      child: Row(children: _spaced(children)),
     );
+  }
+
+  List<Widget> _spaced(List<Widget> items) {
+    final out = <Widget>[];
+    for (var i = 0; i < items.length; i++) {
+      out.add(items[i]);
+      if (i != items.length - 1 && items[i] is! Spacer && items[i + 1] is! Spacer) {
+        out.add(const SizedBox(width: 4));
+      }
+    }
+    return out;
   }
 
   Widget _iconBtn(ComposerTheme theme, String icon, String tooltip, VoidCallback onTap) {
