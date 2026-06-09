@@ -64,40 +64,51 @@ class ComposerToolbar extends StatelessWidget {
     final access = AccessModes.byId(controller.accessMode) ?? AccessModes.all.first;
     final model = _models.firstWhere((m) => m.id == controller.modelName, orElse: () => _models.first);
 
-    final children = <Widget>[];
-    for (final key in mode.toolbar) {
-      switch (key) {
-        case 'spacer':
-          children.add(const Spacer());
-          break;
-        case 'attach':
-          children.add(_attachMenu(context, theme));
-          break;
-        case 'reference':
-          children.add(_iconBtn(theme, 'at-sign', 'Insert reference (@)', () => controller.openTrigger('@')));
-          break;
-        case 'command':
-          children.add(_iconBtn(theme, 'slash-square', 'Run command (/)', () => controller.openTrigger('/')));
-          break;
-        case 'assignee':
-          children.add(_textBtn(theme, 'user-plus', 'Assign', () => controller.openTrigger('@')));
-          break;
-        case 'model':
-          children.add(_modelMenu(context, theme, model));
-          break;
-        case 'access':
-          children.add(_accessMenu(context, theme, access));
-          break;
-        case 'send':
-          children.add(_sendGroup(theme, count, maxLen));
-          break;
-      }
-    }
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.borderSoft))),
-      child: Row(children: _spaced(children)),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          // Responsive toolbar — mirrors the ResizeObserver-driven `.sc-toolbar`
+          // in view.jsx. As the toolbar narrows, pill / button text collapses to
+          // icons so the single row never overflows (Flutter Rows don't wrap).
+          // Thresholds are picked so the laid-out row always fits its width.
+          final narrow = c.maxWidth < 540; // hide model / access / assign labels
+          final tiny = c.maxWidth < 420;   // also hide char counter + send label
+          final children = <Widget>[];
+          for (final key in mode.toolbar) {
+            switch (key) {
+              case 'spacer':
+                children.add(const Spacer());
+                break;
+              case 'attach':
+                children.add(_attachMenu(context, theme));
+                break;
+              case 'reference':
+                children.add(_iconBtn(theme, 'at-sign', 'Insert reference (@)', () => controller.openTrigger('@')));
+                break;
+              case 'command':
+                children.add(_iconBtn(theme, 'slash-square', 'Run command (/)', () => controller.openTrigger('/')));
+                break;
+              case 'assignee':
+                children.add(_textBtn(theme, 'user-plus', 'Assign', () => controller.openTrigger('@'), collapsed: narrow));
+                break;
+              case 'model':
+                children.add(_modelMenu(context, theme, model, narrow));
+                break;
+              case 'access':
+                children.add(_accessMenu(context, theme, access, narrow));
+                break;
+              case 'send':
+                children.add(_sendGroup(theme, count, maxLen, tiny: tiny));
+                break;
+            }
+          }
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Row(children: _spaced(children)),
+          );
+        },
+      ),
     );
   }
 
@@ -128,57 +139,69 @@ class ComposerToolbar extends StatelessWidget {
     );
   }
 
-  Widget _textBtn(ComposerTheme theme, String icon, String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        height: 32,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(ComposerIcons.resolve(icon), size: 16, color: theme.fg2),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: theme.fg2, fontSize: 12.5, fontWeight: FontWeight.w600)),
-          ],
+  Widget _textBtn(ComposerTheme theme, String icon, String label, VoidCallback onTap, {bool collapsed = false}) {
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 32,
+          width: collapsed ? 32 : null,
+          alignment: collapsed ? Alignment.center : null,
+          padding: collapsed ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(ComposerIcons.resolve(icon), size: 16, color: theme.fg2),
+              if (!collapsed) ...[
+                const SizedBox(width: 6),
+                Text(label, style: TextStyle(color: theme.fg2, fontSize: 12.5, fontWeight: FontWeight.w600)),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _pill(ComposerTheme theme, String icon, String label, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        height: 32,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.borderSoft),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(ComposerIcons.resolve(icon), size: 15, color: color),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 4),
-            Icon(ComposerIcons.resolve('chevron-down'), size: 13, color: color),
-          ],
+  Widget _pill(ComposerTheme theme, String icon, String label, Color color, VoidCallback onTap, {bool collapsed = false}) {
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 32,
+          padding: EdgeInsets.symmetric(horizontal: collapsed ? 7 : 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: theme.borderSoft),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(ComposerIcons.resolve(icon), size: 15, color: color),
+              if (!collapsed) ...[
+                const SizedBox(width: 6),
+                Text(label, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w600)),
+              ],
+              const SizedBox(width: 4),
+              Icon(ComposerIcons.resolve('chevron-down'), size: 13, color: color),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _sendGroup(ComposerTheme theme, int count, int? maxLen) {
+  Widget _sendGroup(ComposerTheme theme, int count, int? maxLen, {bool tiny = false}) {
     final disabled = controller.isEmpty || !controller.validation.valid;
     final mode = controller.mode;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (maxLen != null) ...[
+        if (maxLen != null && !tiny) ...[
           Text('$count/$maxLen',
               style: TextStyle(fontFamily: theme.monoFont, fontSize: 11, color: count > maxLen ? theme.danger : theme.fg3)),
           const SizedBox(width: 4),
@@ -192,12 +215,14 @@ class ComposerToolbar extends StatelessWidget {
               onTap: disabled ? null : () => controller.submit(),
               borderRadius: BorderRadius.circular(6),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: EdgeInsets.symmetric(horizontal: tiny ? 9 : 14, vertical: 7),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(mode.submitLabel, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 7),
+                    if (!tiny) ...[
+                      Text(mode.submitLabel, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 7),
+                    ],
                     Icon(ComposerIcons.resolve(mode.submitIcon), size: 15, color: Colors.white),
                   ],
                 ),
@@ -255,12 +280,12 @@ class ComposerToolbar extends StatelessWidget {
         padding: const MaterialStatePropertyAll(EdgeInsets.all(6)),
       );
 
-  Widget _modelMenu(BuildContext context, ComposerTheme theme, _Model model) {
+  Widget _modelMenu(BuildContext context, ComposerTheme theme, _Model model, bool collapsed) {
     return MenuAnchor(
       style: _menuStyle(theme),
       builder: (ctx, ctrl, _) => GestureDetector(
         onTap: () => ctrl.isOpen ? ctrl.close() : ctrl.open(),
-        child: _pill(theme, model.icon, model.label, theme.fg2, () => ctrl.isOpen ? ctrl.close() : ctrl.open()),
+        child: _pill(theme, model.icon, model.label, theme.fg2, () => ctrl.isOpen ? ctrl.close() : ctrl.open(), collapsed: collapsed),
       ),
       menuChildren: _models.map((m) {
         final acc = ComposerAccents.resolve(m.accent);
@@ -271,11 +296,11 @@ class ComposerToolbar extends StatelessWidget {
     );
   }
 
-  Widget _accessMenu(BuildContext context, ComposerTheme theme, AccessMode access) {
+  Widget _accessMenu(BuildContext context, ComposerTheme theme, AccessMode access, bool collapsed) {
     final accColor = ComposerAccents.resolve(access.accent).fg;
     return MenuAnchor(
       style: _menuStyle(theme),
-      builder: (ctx, ctrl, _) => _pill(theme, access.icon, access.label, accColor, () => ctrl.isOpen ? ctrl.close() : ctrl.open()),
+      builder: (ctx, ctrl, _) => _pill(theme, access.icon, access.label, accColor, () => ctrl.isOpen ? ctrl.close() : ctrl.open(), collapsed: collapsed),
       menuChildren: AccessModes.all.map((a) {
         final acc = ComposerAccents.resolve(a.accent);
         return _menuRow(theme,
