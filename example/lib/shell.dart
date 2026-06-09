@@ -12,8 +12,7 @@ import 'ui.dart';
 /// The app shell: GeniusLink-branded header with the cube mark, the tab strip,
 /// the theme toggle and a body that swaps tabs. Mirrors `App` in showcase.jsx.
 class ShowcaseShell extends StatefulWidget {
-  const ShowcaseShell(
-      {super.key, required this.brightness, required this.onToggleTheme});
+  const ShowcaseShell({super.key, required this.brightness, required this.onToggleTheme});
   final Brightness brightness;
   final VoidCallback onToggleTheme;
 
@@ -70,31 +69,23 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
             color: theme.bg,
             border: Border(bottom: BorderSide(color: theme.borderSoft)),
           ),
-          padding:
-              EdgeInsets.symmetric(horizontal: tiny ? 16 : 20, vertical: 12),
-          child: Padding(
-            padding: EdgeInsets.only(top: narrow ? 24.0 : 0),
-            child: Row(
-              children: [
-                Flexible(child: _brand(theme, tiny: tiny)),
-                const Spacer(),
-                if (narrow)
-                  _tabDropdown(theme, tiny: tiny)
-                else
-                  _tabStrip(theme),
-                SizedBox(width: narrow ? 8 : 14),
-                IconButton(
-                  onPressed: widget.onToggleTheme,
-                  tooltip: 'Toggle theme',
-                  icon: Icon(
-                    ComposerIcons.resolve(
-                        widget.brightness == Brightness.dark ? 'sun' : 'moon'),
-                    size: 18,
-                    color: theme.fg2,
-                  ),
+          padding: EdgeInsets.only(right: tiny ? 16 : 20, bottom: 12,left: tiny ? 16 : 20, top: narrow ? 36.0 : 12),
+          child: Row(
+            children: [
+              Flexible(child: _brand(theme, tiny: tiny)),
+              const Spacer(),
+              if (narrow) _tabDropdown(theme, tiny: tiny) else _tabStrip(theme),
+              SizedBox(width: narrow ? 8 : 14),
+              IconButton(
+                onPressed: widget.onToggleTheme,
+                tooltip: 'Toggle theme',
+                icon: Icon(
+                  ComposerIcons.resolve(widget.brightness == Brightness.dark ? 'sun' : 'moon'),
+                  size: 18,
+                  color: theme.fg2,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -116,12 +107,7 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
               Text('SmartComposer',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: theme.fg1,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: theme.displayFont,
-                      letterSpacing: -0.3)),
+                  style: TextStyle(color: theme.fg1, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: theme.displayFont, letterSpacing: -0.3)),
               if (!tiny)
                 Text('GeniusLink · entity-aware editor',
                     maxLines: 1,
@@ -139,11 +125,7 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
               borderRadius: BorderRadius.circular(5),
               border: Border.all(color: theme.borderSoft),
             ),
-            child: Text('v$kSmartComposerVersion',
-                style: TextStyle(
-                    color: theme.fg3,
-                    fontSize: 11,
-                    fontFamily: theme.monoFont)),
+            child: Text('v$kSmartComposerVersion', style: TextStyle(color: theme.fg3, fontSize: 11, fontFamily: theme.monoFont)),
           ),
         ],
       ],
@@ -173,18 +155,12 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
           height: 44,
           child: Row(
             children: [
-              Icon(ComposerIcons.resolve(t[2]),
-                  size: 16, color: on ? theme.accent : theme.fg2),
+              Icon(ComposerIcons.resolve(t[2]), size: 16, color: on ? theme.accent : theme.fg2),
               const SizedBox(width: 10),
-              Text(t[1],
-                  style: TextStyle(
-                      color: on ? theme.accent : theme.fg2,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600)),
+              Text(t[1], style: TextStyle(color: on ? theme.accent : theme.fg2, fontSize: 14, fontWeight: FontWeight.w600)),
               if (on) ...[
                 const Spacer(),
-                Icon(ComposerIcons.resolve('check'),
-                    size: 15, color: theme.accent),
+                Icon(ComposerIcons.resolve('check'), size: 15, color: theme.accent),
               ],
             ],
           ),
@@ -204,15 +180,10 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
             Icon(ComposerIcons.resolve(cur[2]), size: 16, color: theme.accent),
             if (!tiny) ...[
               const SizedBox(width: 8),
-              Text(cur[1],
-                  style: TextStyle(
-                      color: theme.fg1,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600)),
+              Text(cur[1], style: TextStyle(color: theme.fg1, fontSize: 13, fontWeight: FontWeight.w600)),
             ],
             const SizedBox(width: 6),
-            Icon(ComposerIcons.resolve('chevron-down'),
-                size: 15, color: theme.fg3),
+            Icon(ComposerIcons.resolve('chevron-down'), size: 15, color: theme.fg3),
           ],
         ),
       ),
@@ -235,14 +206,9 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(ComposerIcons.resolve(t[2]),
-                      size: 15, color: on ? theme.accent : theme.fg3),
+                  Icon(ComposerIcons.resolve(t[2]), size: 15, color: on ? theme.accent : theme.fg3),
                   const SizedBox(width: 6),
-                  Text(t[1],
-                      style: TextStyle(
-                          color: on ? theme.accent : theme.fg2,
-                          fontSize: 13,
-                          fontWeight: on ? FontWeight.w600 : FontWeight.w500)),
+                  Text(t[1], style: TextStyle(color: on ? theme.accent : theme.fg2, fontSize: 13, fontWeight: on ? FontWeight.w600 : FontWeight.w500)),
                 ],
               ),
             ),
@@ -301,8 +267,7 @@ class _CubeMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        width: 30, height: 30, child: CustomPaint(painter: _CubePainter()));
+    return SizedBox(width: 30, height: 30, child: CustomPaint(painter: _CubePainter()));
   }
 }
 

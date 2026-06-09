@@ -55,9 +55,7 @@ class ComposerEditingController extends TextEditingController {
   int? selectedCode;
 
   /// Builds the visual chip for a token (set by the SmartComposer widget).
-  Widget Function(
-          BuildContext context, ComposerReference ref, int code, bool selected)?
-      chipBuilder;
+  Widget Function(BuildContext context, ComposerReference ref, int code, bool selected)? chipBuilder;
 
   /// Allocate a fresh sentinel code for [ref].
   String allocate(ComposerReference ref) {
@@ -66,14 +64,10 @@ class ComposerEditingController extends TextEditingController {
     return String.fromCharCode(code);
   }
 
-  bool _isSentinel(int code) =>
-      code >= 0xE000 && code <= 0xF8FF && refByCode.containsKey(code);
+  bool _isSentinel(int code) => code >= 0xE000 && code <= 0xF8FF && refByCode.containsKey(code);
 
   @override
-  TextSpan buildTextSpan(
-      {required BuildContext context,
-      TextStyle? style,
-      required bool withComposing}) {
+  TextSpan buildTextSpan({required BuildContext context, TextStyle? style, required bool withComposing}) {
     final children = <InlineSpan>[];
     final buf = StringBuffer();
     void flush() {
@@ -87,9 +81,8 @@ class ComposerEditingController extends TextEditingController {
       if (_isSentinel(rune)) {
         flush();
         final ref = refByCode[rune]!;
-        final chip =
-            chipBuilder?.call(context, ref, rune, selectedCode == rune) ??
-                const SizedBox.shrink();
+        final chip = chipBuilder?.call(context, ref, rune, selectedCode == rune) ??
+            const SizedBox.shrink();
         children.add(WidgetSpan(
           alignment: PlaceholderAlignment.middle,
           baseline: TextBaseline.alphabetic,
@@ -172,8 +165,7 @@ class ComposerController extends ChangeNotifier {
     }
 
     for (final rune in editing.text.runes) {
-      final ref =
-          (rune >= 0xE000 && rune <= 0xF8FF) ? editing.refByCode[rune] : null;
+      final ref = (rune >= 0xE000 && rune <= 0xF8FF) ? editing.refByCode[rune] : null;
       if (ref != null) {
         flush();
         segs.add(ComposerSegment.ref(ref));
@@ -215,13 +207,10 @@ class ComposerController extends ChangeNotifier {
   ComposerEditorValue get value => getValue();
 
   String getEncodedText() => ComposerBridge.segmentsToEncoded(getSegments());
-  String getPlainText() =>
-      SmartComposerPlainTextConverter.convert(getEncodedText());
-  List<TokenIndexEntry> getTokenIndex() =>
-      SmartComposerTokenIndex.extract(getEncodedText());
+  String getPlainText() => SmartComposerPlainTextConverter.convert(getEncodedText());
+  List<TokenIndexEntry> getTokenIndex() => SmartComposerTokenIndex.extract(getEncodedText());
 
-  void setEncodedText(String str) =>
-      setSegments(ComposerBridge.encodedToSegments(str));
+  void setEncodedText(String str) => setSegments(ComposerBridge.encodedToSegments(str));
 
   ComposerValidationResult get validation {
     final v = getValue();
@@ -295,8 +284,7 @@ class ComposerController extends ChangeNotifier {
   // =========================================================================
   /// Insert a reference token at the caret, replacing any selection. Returns
   /// the placeholder length consumed (always inserts a trailing space).
-  void _insertRefAtSelection(ComposerReference ref,
-      {int? replaceStart, int? replaceEnd}) {
+  void _insertRefAtSelection(ComposerReference ref, {int? replaceStart, int? replaceEnd}) {
     final sel = editing.selection;
     final text = editing.text;
     var start = replaceStart ?? (sel.isValid ? sel.start : text.length);
@@ -440,8 +428,7 @@ class ComposerController extends ChangeNotifier {
       if (m != null) {
         final query = m.group(3) ?? '';
         final start = caret - (sym.length + query.length);
-        return _TriggerCtx(
-            key: key, trig: trig, query: query, start: start, end: caret);
+        return _TriggerCtx(key: key, trig: trig, query: query, start: start, end: caret);
       }
     }
     return null;
@@ -464,8 +451,7 @@ class ComposerController extends ChangeNotifier {
         ComposerSearch.search(ctx.query, ctx.trig.types, {'trigger': ctx.key});
     // guard: caret may have moved while awaiting
     final still = _detectTrigger();
-    if (still == null || still.key != ctx.key || still.query != ctx.query)
-      return;
+    if (still == null || still.key != ctx.key || still.query != ctx.query) return;
     final flat = <ComposerReference>[];
     for (final g in result) {
       flat.addAll(g.items);
@@ -612,9 +598,7 @@ class ComposerController extends ChangeNotifier {
     final caret = sel.start;
     if (caret <= 0) return false;
     final prev = editing.text.codeUnitAt(caret - 1);
-    if (prev >= 0xE000 &&
-        prev <= 0xF8FF &&
-        editing.refByCode.containsKey(prev)) {
+    if (prev >= 0xE000 && prev <= 0xF8FF && editing.refByCode.containsKey(prev)) {
       editing.selectedCode = prev;
       _emit();
       return true;
@@ -700,27 +684,21 @@ class ComposerController extends ChangeNotifier {
     if (!dropEnabled || items.isEmpty) return;
     dropCallbacks.onFilesDropped?.call(items);
     if (offset != null) {
-      editing.selection =
-          TextSelection.collapsed(offset: offset.clamp(0, editing.text.length));
+      editing.selection = TextSelection.collapsed(offset: offset.clamp(0, editing.text.length));
     } else if (dropConfig.fallbackInsertAtEnd) {
       editing.selection = TextSelection.collapsed(offset: editing.text.length);
     }
-    var list = dropConfig.allowMultiple
-        ? List<DropItem>.from(items)
-        : items.take(1).toList();
+    var list = dropConfig.allowMultiple ? List<DropItem>.from(items) : items.take(1).toList();
     final rejected = <DropValidationResult>[];
     if (list.length > dropConfig.maxFilesCount) {
       for (final it in list.skip(dropConfig.maxFilesCount)) {
         rejected.add(DropValidationResult(valid: false, item: it, errors: [
-          DropError(
-              code: 'tooManyFiles',
-              message: 'At most ${dropConfig.maxFilesCount} files.'),
+          DropError(code: 'tooManyFiles', message: 'At most ${dropConfig.maxFilesCount} files.'),
         ]));
       }
       list = list.take(dropConfig.maxFilesCount).toList();
     }
-    final inserted =
-        <({SmartComposerToken token, ComposerReference ref, DropItem item})>[];
+    final inserted = <({SmartComposerToken token, ComposerReference ref, DropItem item})>[];
     for (final item in list) {
       final v = SmartComposerDropValidator.validate(item, dropConfig);
       if (!v.valid) {
@@ -728,8 +706,7 @@ class ComposerController extends ChangeNotifier {
         dropCallbacks.onDropValidationError?.call(v);
         continue;
       }
-      final token = dropConfig.generateTokenFromDropItem?.call(item) ??
-          ComposerDnd.dropItemToToken(item);
+      final token = dropConfig.generateTokenFromDropItem?.call(item) ?? ComposerDnd.dropItemToToken(item);
       _ensureLeadingSpace();
       final ref = ComposerBridge.tokenToRef(token);
       _insertRefAtSelection(ref);
@@ -737,8 +714,7 @@ class ComposerController extends ChangeNotifier {
       dropCallbacks.onDroppedTokenInserted?.call(token, ref, item);
     }
     if (rejected.isNotEmpty) dropCallbacks.onDropRejected?.call(rejected);
-    dropCallbacks.onDrop?.call(
-        DropResult(inserted: inserted, rejected: rejected, items: items));
+    dropCallbacks.onDrop?.call(DropResult(inserted: inserted, rejected: rejected, items: items));
     _afterChange();
   }
 
@@ -766,11 +742,9 @@ class ComposerController extends ChangeNotifier {
   void _reconcileRefs() {
     final present = <int>{};
     for (final r in editing.text.runes) {
-      if (r >= 0xE000 && r <= 0xF8FF && editing.refByCode.containsKey(r))
-        present.add(r);
+      if (r >= 0xE000 && r <= 0xF8FF && editing.refByCode.containsKey(r)) present.add(r);
     }
-    final removed =
-        editing.refByCode.keys.where((k) => !present.contains(k)).toList();
+    final removed = editing.refByCode.keys.where((k) => !present.contains(k)).toList();
     for (final code in removed) {
       final ref = editing.refByCode.remove(code);
       if (ref != null) callbacks.onReferenceRemoved?.call(ref);
@@ -821,12 +795,7 @@ class ComposerController extends ChangeNotifier {
 }
 
 class _TriggerCtx {
-  _TriggerCtx(
-      {required this.key,
-      required this.trig,
-      required this.query,
-      required this.start,
-      required this.end});
+  _TriggerCtx({required this.key, required this.trig, required this.query, required this.start, required this.end});
   final String key;
   final TriggerConfig trig;
   final String query;
