@@ -1,0 +1,26 @@
+name: smart_composer_flutter
+description: >-
+  A reusable, entity-aware rich composer for Flutter — a faithful port of the
+  GeniusLink SmartComposer React component. Mixes plain text with inline
+  reference tokens (users, files, invoices, accounts, tasks, tools, commands and
+  any custom type), with a human-readable encoded-text source of truth, a
+  React-compatible parser, drag & drop, a read-only preview with remote
+  resolution, modes, triggers, access postures, validation and theming.
+version: 1.0.0
+homepage: https://genius.link
+repository: https://example.com/smart_composer_flutter
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
