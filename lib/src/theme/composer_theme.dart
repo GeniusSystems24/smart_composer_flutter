@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// A swappable composer theme — the data form of a `ComposerTheme`. Defaults
 /// reproduce the GeniusLink design tokens (dark + light), matching

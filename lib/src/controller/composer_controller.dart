@@ -111,8 +111,8 @@ class ComposerEditingController extends TextEditingController {
 class ComposerController extends ChangeNotifier {
   ComposerController({
     required ComposerMode mode,
-    ComposerCallbacks callbacks = const ComposerCallbacks(),
-    DropCallbacks dropCallbacks = const DropCallbacks(),
+    this.callbacks = const ComposerCallbacks(),
+    this.dropCallbacks = const DropCallbacks(),
     DropConfig? dnd,
     SearchProvider? searchProvider,
     String? accessMode,
@@ -120,8 +120,6 @@ class ComposerController extends ChangeNotifier {
     bool readOnly = false,
     this.submitOnEnter = true,
   })  : _mode = mode,
-        callbacks = callbacks,
-        dropCallbacks = dropCallbacks,
         dropConfig = dnd ?? const DropConfig(),
         _searchProvider = searchProvider,
         _accessMode = accessMode ?? mode.defaultAccess,

@@ -1,9 +1,8 @@
-import 'package:smart_composer_flutter/smart_composer_flutter.dart';
-
 import '../dnd/dnd.dart';
 import '../encoding/bridge.dart';
 import '../encoding/parser.dart';
 import '../encoding/serializer.dart';
+import '../encoding/token.dart';
 import '../encoding/value.dart';
 import '../model/reference.dart';
 
