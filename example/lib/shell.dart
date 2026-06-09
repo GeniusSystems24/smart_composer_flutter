@@ -62,8 +62,8 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
       child: Row(
         children: [
           _brand(theme),
-          const Spacer(),
-          _tabStrip(theme),
+          const SizedBox(width: 12),
+          Expanded(child: _tabStrip(theme)),
           const SizedBox(width: 14),
           IconButton(
             onPressed: widget.onToggleTheme,
@@ -107,30 +107,40 @@ class _ShowcaseShellState extends State<ShowcaseShell> {
   }
 
   Widget _tabStrip(ComposerTheme theme) {
-    return Wrap(
-      spacing: 2,
-      children: _tabs.map((t) {
-        final on = _tab == t[0];
-        return Material(
-          color: on ? theme.accent.withOpacity(0.14) : Colors.transparent,
+    final items = _tabs.map((t) {
+      final on = _tab == t[0];
+      return Material(
+        color: on ? theme.accent.withOpacity(0.14) : Colors.transparent,
+        borderRadius: BorderRadius.circular(7),
+        child: InkWell(
+          onTap: () => setState(() => _tab = t[0]),
           borderRadius: BorderRadius.circular(7),
-          child: InkWell(
-            onTap: () => setState(() => _tab = t[0]),
-            borderRadius: BorderRadius.circular(7),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(ComposerIcons.resolve(t[2]), size: 15, color: on ? theme.accent : theme.fg3),
-                  const SizedBox(width: 6),
-                  Text(t[1], style: TextStyle(color: on ? theme.accent : theme.fg2, fontSize: 13, fontWeight: on ? FontWeight.w600 : FontWeight.w500)),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(ComposerIcons.resolve(t[2]), size: 15, color: on ? theme.accent : theme.fg3),
+                const SizedBox(width: 6),
+                Text(t[1], style: TextStyle(color: on ? theme.accent : theme.fg2, fontSize: 13, fontWeight: on ? FontWeight.w600 : FontWeight.w500)),
+              ],
             ),
           ),
-        );
-      }).toList(),
+        ),
+      );
+    }).toList();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            items[i],
+            if (i < items.length - 1) const SizedBox(width: 2),
+          ],
+        ],
+      ),
     );
   }
 

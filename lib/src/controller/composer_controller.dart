@@ -254,7 +254,8 @@ class ComposerController extends ChangeNotifier {
       selection: TextSelection.collapsed(offset: buf.length),
     );
     _suppressReconcile--;
-    _afterChange();
+    // Defer so callers inside initState/build don't trigger setState-during-build.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _afterChange());
   }
 
   void clear() {
@@ -262,7 +263,7 @@ class ComposerController extends ChangeNotifier {
     editing.refByCode.clear();
     editing.value = const TextEditingValue(text: '');
     _suppressReconcile--;
-    _afterChange();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _afterChange());
   }
 
   // ---- attachments ----
