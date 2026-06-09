@@ -22,6 +22,8 @@ class _PlaygroundTabState extends State<PlaygroundTab> {
 
   String _modeId = 'aiPrompt';
   bool _readOnly = false;
+  // config panel collapsed by default on mobile (stacked under the composer)
+  bool _cfgOpen = false;
   final List<_LogEntry> _log = [];
   ComposerEditorValue _snap = ComposerEditorValue.empty;
   ComposerController? _api;
@@ -66,7 +68,8 @@ class _PlaygroundTabState extends State<PlaygroundTab> {
   @override
   Widget build(BuildContext context) {
     final theme = ComposerThemeScope.of(context);
-    final wide = MediaQuery.of(context).size.width > 920;
+    // ≤940px the layout stacks and the config panel becomes collapsible
+    final wide = MediaQuery.of(context).size.width > 940;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -78,7 +81,7 @@ class _PlaygroundTabState extends State<PlaygroundTab> {
           children: [
             Expanded(flex: wide ? 3 : 0, child: _main(theme)),
             SizedBox(width: wide ? 20 : 0, height: wide ? 0 : 20),
-            SizedBox(width: wide ? 320 : double.infinity, child: _panel(theme)),
+            SizedBox(width: wide ? 320 : double.infinity, child: _panel(theme, collapsible: !wide)),
           ],
         ),
       ],
@@ -236,14 +239,39 @@ class _PlaygroundTabState extends State<PlaygroundTab> {
     );
   }
 
-  Widget _panel(ComposerTheme theme) {
+  Widget _panel(ComposerTheme theme, {bool collapsible = false}) {
     final triggers = _mode.triggers;
+    final showBody = !collapsible || _cfgOpen;
     return Ui.card(
       theme,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Ui.panelHeader(theme, ComposerIcons.resolve('sliders-horizontal'), 'Configuration'),
+          // Configuration header doubles as a collapse toggle on mobile
+          if (collapsible)
+            InkWell(
+              onTap: () => setState(() => _cfgOpen = !_cfgOpen),
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Icon(ComposerIcons.resolve('sliders-horizontal'), size: 15, color: theme.fg2),
+                    const SizedBox(width: 8),
+                    Text('Configuration', style: TextStyle(color: theme.fg1, fontSize: 13, fontWeight: FontWeight.w700)),
+                    const Spacer(),
+                    AnimatedRotation(
+                      turns: _cfgOpen ? 0 : -0.25,
+                      duration: const Duration(milliseconds: 180),
+                      child: Icon(ComposerIcons.resolve('chevron-down'), size: 15, color: theme.fg3),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Ui.panelHeader(theme, ComposerIcons.resolve('sliders-horizontal'), 'Configuration'),
+          if (showBody) ...[
           _fieldLabel(theme, 'Mode'),
           Wrap(
             spacing: 6,
@@ -305,6 +333,7 @@ class _PlaygroundTabState extends State<PlaygroundTab> {
           const SizedBox(height: 20),
           Ui.panelHeader(theme, ComposerIcons.resolve('activity'), 'Callback log'),
           _logView(theme),
+          ],
         ],
       ),
     );
