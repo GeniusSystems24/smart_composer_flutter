@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SmartComposer · Flutter ⇄ React parser parity</title>
+<style>
+  :root{
+    --bg:#111318; --card:#1E2025; --bg2:#33353A; --border:rgba(67,70,84,.5);
+    --fg1:#E2E2E9; --fg2:#C3C6D7; --fg3:#8D90A0; --blue:#4A7CFF; --green:#1DB88A; --red:#EF4444; --orange:#F97316;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+    --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg1);font-family:var(--sans);padding:40px 24px 80px;}
+  .wrap{max-width:1000px;margin:0 auto;}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.5px;margin:0 0 4px;}
+  .sub{color:var(--fg3);font-size:14px;margin:0 0 24px;}
+  .summary{display:flex;gap:12px;align-items:center;margin:0 0 24px;flex-wrap:wrap;}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-weight:700;font-size:14px;}
+  .badge.pass{background:rgba(29,184,138,.16);color:var(--green);border:1px solid rgba(29,184,138,.4);}
+  .badge.fail{background:rgba(239,68,68,.16);color:var(--red);border:1px solid rgba(239,68,68,.4);}
+  .group{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin:0 0 16px;}
+  .group h2{font-size:14px;margin:0 0 12px;display:flex;justify-content:space-between;color:var(--fg1);}
+  .group h2 .c{color:var(--fg3);font-family:var(--mono);font-weight:500;font-size:12px;}
+  .row{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:13px;}
+  .row .dot{flex:none;width:18px;height:18px;border-radius:4px;display:grid;place-items:center;font-size:12px;font-weight:800;}
+  .row.ok .dot{background:rgba(29,184,138,.16);color:var(--green);}
+  .row.no .dot{background:rgba(239,68,68,.16);color:var(--red);}
+  .row .name{color:var(--fg2);flex:1;}
+  .row .detail{color:var(--red);font-family:var(--mono);font-size:11px;max-width:340px;text-align:right;}
+  code.k{font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:4px;color:var(--fg2);font-size:12px;}
+  .note{color:var(--fg3);font-size:12.5px;line-height:1.6;margin:16px 0 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Flutter ⇄ React parser parity</h1>
+  <p class="sub">The React parser (<code class="k">composer/encoding.js</code>) is the source of truth. <code class="k">FL.*</code> below is a line-for-line JS transliteration of the Flutter/Dart port in <code class="k">smart_composer_flutter/lib/src/encoding/</code> &amp; <code class="k">dnd/</code>. Every case runs through <b>both</b> and compares output.</p>
+  <div class="summary" id="summary"></div>
+  <div id="results"></div>
+  <p class="note">This page does not run Dart — it proves the Dart port and the React reference implement the <b>identical algorithm</b> by transliterating the Dart back to JS and diffing the outputs against the canonical React functions across a corpus that includes every case from <code class="k">composer/tests.js</code>. The Dart source is the authoritative artifact; this is an equivalence proof for the encoded-text contract.</p>
+</div>
+
+<!-- the React source of truth -->
+<script src="composer/model.js"></script>
+<script src="composer/encoding.js"></script>
+<script src="composer/dnd.js"></script>
+
+<script>
+/* =============================================================================
+   FL.*  — faithful JS transliteration of the Flutter/Dart encoding port.
+   Mirrors smart_composer_flutter/lib/src/encoding/{parser,serializer,
+   encoding_util,bridge}.dart and dnd/dnd.dart exactly (same control flow).
+============================================================================= */
+const FL = (function () {
+  const WORD = /[A-Za-z0-9_-]/;
+  const isWord = (ch) => ch != null && WORD.test(ch);
+  const at = (s, j) => (j >= 0 && j < s.length) ? s[j] : null; // mirrors Dart _at
+
+  // ---- parser.dart ----
+  function parseTokenAt(s, i) {
+    let j = i + 1, prefix = '';
+    while (j < s.length && !isWord(s[j]) && s[j] !== ':' && s[j] !== ']' && s[j] !== '[') { prefix += s[j]; j++; }
+    let tagType = '';
+    while (j < s.length && isWord(s[j])) { tagType += s[j]; j++; }
+    if (at(s, j) !== ':') return { ok:false, reason:'missing-colon', end:j };
+    j++;
+    let display = '';
+    while (j < s.length && s[j] !== ']') {
+      if (s[j] === '\\' && j + 1 < s.length) { display += s[j+1] === 'n' ? '\n' : s[j+1]; j += 2; continue; }
+      if (s[j] === '\n') return { ok:false, reason:'newline-in-token', end:j };
+      display += s[j]; j++;
+    }
+    if (at(s, j) !== ']') return { ok:false, reason:'unterminated-display', end:j };
+    j++;
+    if (at(s, j) !== '(') return { ok:false, reason:'missing-paren', end:j };
+    j++;
+    let value = '';
+    while (j < s.length && s[j] !== ')') {
+      if (s[j] === '\\' && j + 1 < s.length) { value += s[j+1] === 'n' ? '\n' : s[j+1]; j += 2; continue; }
+      if (s[j] === '\n') return { ok:false, reason:'newline-in-token', end:j };
+      value += s[j]; j++;
+    }
+    if (at(s, j) !== ')') return { ok:false, reason:'unterminated-value', end:j };
+    j++;
+    if (!tagType) return { ok:false, reason:'empty-tagType', end:i };
+    if (!value) return { ok:false, reason:'empty-valueText', end:i };
+    return { ok:true, end:j, token:{
+      prefix, tagType, displayText: display || value, valueText: value,
+      rawText: s.slice(i, j), startOffset:i, endOffset:j, resolveState:'idle', metadata:{},
+    }};
+  }
+  function parse(encodedText) {
+    const s = encodedText == null ? '' : String(encodedText);
+    const segments = [], tokens = [], errors = [];
+    let i = 0, textStart = 0;
+    const flush = (end) => { if (end > textStart) segments.push({ kind:'text', text:s.slice(textStart, end) }); };
+    while (i < s.length) {
+      if (s[i] === '\\' && at(s, i+1) === '[') { i += 2; continue; }
+      if (s[i] === '[') {
+        const r = parseTokenAt(s, i);
+        if (r.ok) { flush(i); segments.push({ kind:'token', token:r.token }); tokens.push(r.token); i = r.end; textStart = i; continue; }
+        errors.push({ index:i, reason:r.reason }); i++; continue;
+      }
+      i++;
+    }
+    flush(s.length);
+    const plainText = segments.map((x) => x.kind === 'text' ? x.text : x.token.displayText).join('');
+    return { encodedText:s, segments, tokens, errors, plainText };
+  }
+
+  // ---- encoding_util.dart ----
+  const PREFIX_BY_TYPE = {
+    '@': ['user','member','team','club','file','folder','document','image','video','source','link'],
+    '#': ['task','project','invoice','report'],
+    '$': ['tool','skill','plugin','financialAccount','bankAccount','payment','transaction'],
+    '/': ['command'],
+  };
+  function prefixForType(type){ for (const p in PREFIX_BY_TYPE) if (PREFIX_BY_TYPE[p].includes(type)) return p; return '@'; }
+  function schemeForType(type){
+    const special = { financialAccount:'financial-account', bankAccount:'bank-account' };
+    if (special[type]) return special[type];
+    return type.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+  const escDisplay = (s) => String(s).replace(/\\/g,'\\\\').replace(/\]/g,'\\]').replace(/\n/g,'\\n');
+  const escValue   = (s) => String(s).replace(/\\/g,'\\\\').replace(/\)/g,'\\)').replace(/\n/g,'\\n');
+
+  // ---- serializer.dart ----
+  function tokenToEncoded(t){
+    const prefix = (t.prefix != null && t.prefix !== '') ? t.prefix : prefixForType(t.tagType);
+    const display = escDisplay(t.displayText || t.valueText || '');
+    return `[${prefix}${t.tagType}:${display}](${escValue(t.valueText || '')})`;
+  }
+  function serializeSegments(segments){
+    return segments.map((s) => s.kind === 'text' ? s.text : tokenToEncoded(s.token)).join('');
+  }
+  const plainTextConvert = (s) => parse(s).plainText;
+  const tokenIndexExtract = (s) => parse(s).tokens.map((t) => ({ prefix:t.prefix, tagType:t.tagType, displayText:t.displayText, valueText:t.valueText }));
+
+  // ---- bridge.dart ----
+  const FILE_TYPES = ['file','folder','document','image','video'];
+  const URI_RE = /^[a-z][\w+.-]*:\/\//i;
+  const WIN_RE = /^[a-zA-Z]:[\\/]/;
+  const slug = (s) => String(s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  const firstNonEmpty = (arr) => { for (const c of arr) if (c) return c; return ''; };
+  function valueTextForRef(ref){
+    const v = ref.value != null ? String(ref.value) : '';
+    if (v && URI_RE.test(v)) return v;
+    if (ref.url) return ref.url;
+    if (FILE_TYPES.includes(ref.type)) {
+      const p = firstNonEmpty([ref.path, v, ref.title]);
+      if (URI_RE.test(p)) return p;
+      if (WIN_RE.test(p)) return 'file:///' + p.replace(/\\/g,'/');
+      return 'file:///' + p.replace(/^\/+/, '');
+    }
+    const id = firstNonEmpty([v, ref.id, slug(ref.title)]);
+    return `${schemeForType(ref.type)}://${id}`;
+  }
+
+  // ---- dnd.dart ----
+  const EXT = {
+    image:['png','jpg','jpeg','gif','webp','svg','bmp','heic','avif'],
+    video:['mp4','mov','avi','mkv','webm','m4v'],
+    document:['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','csv','md','rtf','pages','numbers','key'],
+  };
+  function mapExtToType(ext, mime){
+    const e = (ext||'').toLowerCase(), m = (mime||'').toLowerCase();
+    if (m.startsWith('image/') || EXT.image.includes(e)) return 'image';
+    if (m.startsWith('video/') || EXT.video.includes(e)) return 'video';
+    if (EXT.document.includes(e) || /pdf|word|excel|powerpoint|spreadsheet|presentation|msword|officedocument|csv|text\/plain/.test(m)) return 'document';
+    return 'file';
+  }
+  const extOf = (name) => { const m = /\.([A-Za-z0-9]+)$/.exec(name); return m ? m[1].toLowerCase() : ''; };
+  const basename = (p) => p.split(/[\\/]/).pop();
+  function fileUri(p){
+    if (/^[a-z][\w+.-]*:\/\//i.test(p)) return p;
+    if (/^[a-zA-Z]:[\\/]/.test(p)) return 'file:///' + p.replace(/\\/g,'/');
+    if (p.startsWith('/')) return 'file://' + p;
+    return 'file:///' + encodeURI(p).replace(/^\/+/, '');
+  }
+  function makeDropItem(raw){
+    const name = raw.name || (raw.path ? basename(raw.path) : null) || (raw.uri ? basename(raw.uri) : null) || 'file';
+    const ext = raw.extension || extOf(name);
+    const type = raw.type || mapExtToType(ext, raw.mimeType);
+    return { type, name, path:raw.path||'', uri:raw.uri || fileUri(raw.path||name), mimeType:raw.mimeType||'', extension:ext, size:raw.size||0 };
+  }
+  function makeDropItemFromUrl(url){
+    const clean = url.trim();
+    const label = clean.replace(/^https?:\/\//,'').replace(/\/$/,'');
+    return makeDropItem({ type:'link', name:label, uri:clean, mimeType:'text/uri-list', source:'url', isLocal:false, isRemote:true });
+  }
+  function dropItemToToken(item){
+    return { prefix:prefixForType(item.type), tagType:item.type, displayText:item.name, valueText:item.uri, rawText:'', metadata:item.metadata||{}, resolveState:'idle' };
+  }
+  function dropValidate(item, cfg){
+    cfg = cfg || {};
+    const blocked = cfg.blockedExtensions || ['exe','bat','cmd','sh','dll','msi','app'];
+    const maxFileSize = cfg.maxFileSize != null ? cfg.maxFileSize : 25*1024*1024;
+    const errors = [];
+    const ext = (item.extension||'').toLowerCase();
+    if (blocked.includes(ext)) errors.push({ code:'blockedType' });
+    if (cfg.allowedExtensions && ext && !cfg.allowedExtensions.includes(ext)) errors.push({ code:'extensionNotAllowed' });
+    const mimeOk = (mime, list) => list.some((p) => p === mime || (p.endsWith('/*') && mime.startsWith(p.slice(0,-1))));
+    if (cfg.allowedMimeTypes && item.mimeType && !mimeOk(item.mimeType, cfg.allowedMimeTypes)) errors.push({ code:'mimeNotAllowed' });
+    if (item.size > 0 && item.size > maxFileSize) errors.push({ code:'tooLarge' });
+    return { valid: errors.length === 0, errors, item };
+  }
+
+  return { parse, prefixForType, schemeForType, tokenToEncoded, serializeSegments, plainTextConvert,
+           tokenIndexExtract, valueTextForRef, mapExtToType, makeDropItem, makeDropItemFromUrl,
+           dropItemToToken, dropValidate };
+})();
+
+/* =============================================================================
+   Comparison harness: run a corpus through BOTH SC (React) and FL (Dart-port),
+   plus the exact assertions from composer/tests.js using FL.
+============================================================================= */
+(function () {
+  const results = [];
+  let group = '';
+  const G = (g) => group = g;
+  const ok = (name, cond, detail) => results.push({ group, name, pass: !!cond, detail: detail || '' });
+  const tokShape = (t) => ({ prefix:t.prefix, tagType:t.tagType, displayText:t.displayText, valueText:t.valueText });
+  const J = JSON.stringify;
+
+  // ---- 1. parse parity across a corpus ----
+  G('parse() parity (FL == React)');
+  const CORPUS = [
+    'Hello [@user:Ahmed](user://user_123)!',
+    '[$tool:Browser Use](skill://openai-bundled/browser-use/0.1.0-alpha1/browser)',
+    '[@user:A](user://a)[#task:B](task://b)',
+    'lead [@user:A](user://a)',
+    'Pay [#invoice:INV-2026-001](invoice://INV-2026-001) from [$financialAccount:Main Bank Account](financial-account://main_bank_account).',
+    'see [docs](https://x.y)',
+    '[@user:Ahmed(user://x)',
+    '[@user:Ahmed] hi',
+    '[@:Ahmed](user://x)',
+    '[@user:Ahmed]()',
+    '[@user:](user://user_9)',
+    '[~widget:Gadget](widget://w_1)',
+    'escaped \\[not a token] stays text',
+    'multi\nline [@user:A](user://a) tail',
+    '[@file:weird) name](file:///a/b\\)c.pdf)',
+    'I want you to use [$tool:Browser Use](skill://o/b) on [@source:Documents](plugin://documents@x).',
+    Array.from({length:12},(_,i)=>`[#task:T${i}](task://t_${i})`).join(' '),
+  ];
+  CORPUS.forEach((src, i) => {
+    const a = SC.SmartComposerParser.parse(src);
+    const b = FL.parse(src);
+    const same =
+      a.segments.length === b.segments.length &&
+      a.tokens.length === b.tokens.length &&
+      a.errors.length === b.errors.length &&
+      a.plainText === b.plainText &&
+      J(a.tokens.map(tokShape)) === J(b.tokens.map(tokShape)) &&
+      J(a.segments.map(s=>s.kind)) === J(b.segments.map(s=>s.kind));
+    ok(`corpus #${i+1}`, same, same ? '' : `tokens ${J(b.tokens.map(tokShape))} vs ${J(a.tokens.map(tokShape))}`);
+  });
+
+  // ---- 2. serializer / plainText / tokenIndex parity ----
+  G('serialize / plainText / index parity');
+  CORPUS.forEach((src, i) => {
+    const aSer = SC.SmartComposerSerializer.serialize({ segments: SC.SmartComposerParser.parse(src).segments });
+    const bSer = FL.serializeSegments(FL.parse(src).segments);
+    ok(`serialize #${i+1}`, aSer === bSer, aSer === bSer ? '' : `${bSer} ≠ ${aSer}`);
+  });
+  ok('plainText parity', CORPUS.every(s => SC.SmartComposerPlainTextConverter.convert(s) === FL.plainTextConvert(s)));
+  ok('tokenIndex parity', CORPUS.every(s => J(SC.SmartComposerTokenIndex.extract(s)) === J(FL.tokenIndexExtract(s))));
+
+  // ---- 3. bridge: valueTextForRef parity ----
+  G('valueTextForRef parity');
+  const REFS = [
+    { type:'user', title:'Ahmed', id:'user_123' },
+    { type:'financialAccount', title:'Main Bank Account' },
+    { type:'file', title:'client-a.pdf', path:'C:\\Users\\Al-saiary\\contracts\\client-a.pdf' },
+    { type:'file', title:'a', path:'/var/log/a.txt' },
+    { type:'invoice', title:'INV-1', value:'invoice://INV-1' },
+    { type:'bankAccount', title:'Al-Rajhi 6612' },
+  ];
+  REFS.forEach((r, i) => {
+    const ref = SC.createReference(r);
+    const a = SC.valueTextForRef(ref);
+    const b = FL.valueTextForRef(ref);
+    ok(`ref #${i+1} (${r.type})`, a === b, a === b ? '' : `${b} ≠ ${a}`);
+  });
+
+  // ---- 4. dnd parity ----
+  G('drag & drop parity');
+  [['png','image/png'],['mp4','video/mp4'],['pdf','application/pdf'],['zip','application/zip'],['','application/vnd.ms-excel'.replace('vnd.ms-excel','vnd.ms-excel')]]
+    .forEach(([e,m],i)=>ok(`mapExtToType #${i+1}`, SC.mapExtToType(e,m)===FL.mapExtToType(e,m), `${FL.mapExtToType(e,m)} vs ${SC.mapExtToType(e,m)}`));
+  [{name:'client-a.pdf',path:'C:\\contracts\\client-a.pdf',size:2400000},{name:'a.png',mimeType:'image/png',size:1000},{name:'installer.exe',size:10}]
+    .forEach((raw,i)=>{
+      const a = SC.makeDropItem(raw), b = FL.makeDropItem(raw);
+      ok(`makeDropItem #${i+1}`, a.type===b.type && a.uri===b.uri && a.name===b.name, `${b.type}/${b.uri} vs ${a.type}/${a.uri}`);
+      const ta = SC.tokenToEncoded(SC.dropItemToToken(a)), tb = FL.tokenToEncoded(FL.dropItemToToken(b));
+      ok(`dropToken encode #${i+1}`, ta===tb, `${tb} ≠ ${ta}`);
+    });
+  ok('makeDropItemFromUrl parity', (()=>{const a=SC.makeDropItemFromUrl('https://genius.link/q4-board/');const b=FL.makeDropItemFromUrl('https://genius.link/q4-board/');return a.type===b.type&&a.name===b.name;})());
+
+  // ---- 5. the EXACT assertions from composer/tests.js, run against FL ----
+  G('tests.js assertions (against FL port)');
+  const eq = (name,a,b)=>ok(name, a===b, a===b?'':`got ${J(a)} ≠ ${J(b)}`);
+  {
+    const r = FL.parse('Hello [@user:Ahmed](user://user_123)!');
+    eq('segment count', r.segments.length, 3);
+    eq('token tagType', r.tokens[0].tagType, 'user');
+    eq('token valueText', r.tokens[0].valueText, 'user://user_123');
+  }
+  eq('uri value preserved', FL.parse('[$tool:Browser Use](skill://openai-bundled/browser-use/0.1.0-alpha1/browser)').tokens[0].valueText, 'skill://openai-bundled/browser-use/0.1.0-alpha1/browser');
+  eq('adjacent: 2 tokens', FL.parse('[@user:A](user://a)[#task:B](task://b)').tokens.length, 2);
+  {
+    const src='Pay [#invoice:INV-2026-001](invoice://INV-2026-001) from [$financialAccount:Main Bank Account](financial-account://main_bank_account).';
+    eq('round-trips identically', FL.serializeSegments(FL.parse(src).segments), src);
+  }
+  eq('tokens → displayText', FL.plainTextConvert('Pay invoice [#invoice:INV-2026-001](invoice://INV-2026-001) from [$financialAccount:Main Bank Account](financial-account://main_bank_account).'), 'Pay invoice INV-2026-001 from Main Bank Account.');
+  {
+    const t={prefix:'@',tagType:'user',displayText:'Ahmed: Lead [VIP]',valueText:'user://u_1'};
+    eq('display with ] survives', FL.parse(FL.tokenToEncoded(t)).tokens[0].displayText, 'Ahmed: Lead [VIP]');
+    const t2={prefix:'@',tagType:'file',displayText:'weird) name',valueText:'file:///a/b(c).pdf'};
+    const back2=FL.parse(FL.tokenToEncoded(t2)).tokens[0];
+    eq('value with ) survives', back2.valueText, 'file:///a/b(c).pdf');
+    eq('display with ) survives', back2.displayText, 'weird) name');
+  }
+  eq('windows path → file:///', FL.valueTextForRef(SC.createReference({type:'file',title:'client-a.pdf',path:'C:\\Users\\Al-saiary\\contracts\\client-a.pdf'})), 'file:///C:/Users/Al-saiary/contracts/client-a.pdf');
+  eq('missing closing bracket', FL.parse('[@user:Ahmed(user://x)').tokens.length, 0);
+  eq('empty tagType invalid', FL.parse('[@:Ahmed](user://x)').tokens.length, 0);
+  eq('empty valueText invalid', FL.parse('[@user:Ahmed]()').tokens.length, 0);
+  eq('plain markdown link untouched', FL.parse('see [docs](https://x.y)').tokens.length, 0);
+  eq('empty display → value', FL.parse('[@user:](user://user_9)').tokens[0].displayText, 'user://user_9');
+  eq('unknown tagType parsed', FL.parse('[~widget:Gadget](widget://w_1)').tokens.length, 1);
+  eq('unknown prefix kept', FL.parse('[~widget:Gadget](widget://w_1)').tokens[0].prefix, '~');
+  {
+    const long='x'.repeat(2000);
+    eq('long value intact', FL.parse(`[@file:big](file:///${long})`).tokens[0].valueText.length, ('file:///'+long).length);
+    const many=Array.from({length:50},(_,i)=>`[#task:T${i}](task://t_${i})`).join(' ');
+    eq('50 tokens parsed', FL.parse(many).tokens.length, 50);
+  }
+  {
+    const idx=FL.tokenIndexExtract('[#invoice:INV-1](invoice://1) & [@user:A](user://a)');
+    eq('index length', idx.length, 2);
+    eq('index entry shape', Object.keys(idx[0]).sort().join(','), 'displayText,prefix,tagType,valueText');
+  }
+  {
+    eq('png → image', FL.mapExtToType('png','image/png'), 'image');
+    eq('pdf → document', FL.mapExtToType('pdf','application/pdf'), 'document');
+    eq('zip → file (fallback)', FL.mapExtToType('zip','application/zip'), 'file');
+    const item=FL.makeDropItem({name:'client-a.pdf',path:'C:\\contracts\\client-a.pdf',size:2400000});
+    eq('drop item type', item.type, 'document');
+    eq('drop item uri = file://', item.uri, 'file:///C:/contracts/client-a.pdf');
+    eq('dropped token round-trips', FL.parse(FL.tokenToEncoded(FL.dropItemToToken(item))).tokens[0].valueText, 'file:///C:/contracts/client-a.pdf');
+    const url=FL.makeDropItemFromUrl('https://genius.link/q4-board/');
+    eq('url → link', url.type, 'link');
+    eq('url display trimmed', url.name, 'genius.link/q4-board');
+  }
+  {
+    const big=FL.makeDropItem({name:'huge.zip',size:48*1024*1024});
+    ok('rejects oversize', FL.dropValidate(big,{maxFileSize:25*1024*1024}).valid===false);
+    const exe=FL.makeDropItem({name:'installer.exe',size:10});
+    ok('rejects blocked ext', FL.dropValidate(exe,{}).valid===false);
+    const png=FL.makeDropItem({name:'a.png',mimeType:'image/png',size:1000});
+    ok('accepts allowed ext', FL.dropValidate(png,{allowedExtensions:['png']}).valid===true);
+    ok('mime wildcard match', FL.dropValidate(png,{allowedMimeTypes:['image/*']}).valid===true);
+  }
+
+  /* render */
+  const pass = results.filter(r=>r.pass).length, total = results.length, fail = total - pass;
+  const groups = {};
+  results.forEach(r => (groups[r.group]=groups[r.group]||[]).push(r));
+  document.getElementById('summary').innerHTML =
+    `<span class="badge ${fail===0?'pass':'fail'}">${fail===0?'✓':'✕'} ${pass}/${total} parity checks passing</span>` +
+    (fail>0?`<span class="badge fail">${fail} failing</span>`:'');
+  document.getElementById('results').innerHTML = Object.keys(groups).map(g => {
+    const rows = groups[g];
+    const gp = rows.filter(r=>r.pass).length;
+    return `<div class="group"><h2>${g}<span class="c">${gp}/${rows.length}</span></h2>` +
+      rows.map(r => `<div class="row ${r.pass?'ok':'no'}"><span class="dot">${r.pass?'✓':'✕'}</span><span class="name">${r.name}</span>${r.pass?'':`<span class="detail">${r.detail}</span>`}</div>`).join('') +
+      `</div>`;
+  }).join('');
+})();
+</script>
+</body>
+</html>

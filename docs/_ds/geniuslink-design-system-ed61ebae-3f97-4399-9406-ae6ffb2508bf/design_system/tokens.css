@@ -1,0 +1,91 @@
+/* ============================================================
+   GeniusLink Design System — Tokens (V2)
+   Single import that exposes the full token set. Re-exports the
+   color/type/spacing/radius/shadow base, then ADDS the motion,
+   easing, z-index/overlay and breakpoint tokens that V2 needs.
+
+   Consume from any component:  @import "../design_system/tokens.css";
+   NEVER hardcode a value a token already covers.
+   ============================================================ */
+
+@import url("../colors_and_type.css");
+
+:root {
+  /* ====================================================
+     MOTION — durations
+     Brand is a slow, deliberate interface. Keep it subtle.
+     ==================================================== */
+  --gl-dur-instant:  0ms; /* @kind other */     /* route changes — no animation */
+  --gl-dur-fast:     100ms; /* @kind other */   /* hover tint, icon swaps */
+  --gl-dur-base:     150ms; /* @kind other */   /* DEFAULT — color/bg transitions */
+  --gl-dur-moderate: 200ms; /* @kind other */   /* expand / collapse, accordions */
+  --gl-dur-slow:     300ms; /* @kind other */   /* bottom sheet, dialog enter */
+  --gl-dur-slower:   500ms; /* @kind other */   /* skeleton shimmer sweep */
+
+  /* Stagger step for list / message entrance */
+  --gl-stagger:      40ms; /* @kind other */
+
+  /* ====================================================
+     MOTION — easing curves
+     Restraint by design: only ease / ease-out / ease-in,
+     plus one "emphasized" curve for sheets & dialogs.
+     No springs, no bounce, no parallax.
+     ==================================================== */
+  --gl-ease-standard:   cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */  /* general */
+  --gl-ease-out:        cubic-bezier(0, 0, 0.2, 1); /* @kind other */    /* enter / decelerate */
+  --gl-ease-in:         cubic-bezier(0.4, 0, 1, 1); /* @kind other */    /* exit / accelerate */
+  --gl-ease-emphasized: cubic-bezier(0.2, 0, 0, 1); /* @kind other */    /* sheets, dialogs */
+
+  /* Composed defaults */
+  --gl-transition:      all var(--gl-dur-base) var(--gl-ease-standard); /* @kind other */
+  --gl-transition-color: color var(--gl-dur-base) var(--gl-ease-standard),
+                         background-color var(--gl-dur-base) var(--gl-ease-standard),
+                         border-color var(--gl-dur-base) var(--gl-ease-standard); /* @kind other */
+
+  /* ====================================================
+     Z-INDEX / OVERLAY LAYERS
+     A strict scale so overlays never fight.
+     ==================================================== */
+  --gl-z-base:     0; /* @kind other */
+  --gl-z-raised:   10; /* @kind other */    /* cards lifted on hover */
+  --gl-z-sticky:   100; /* @kind other */   /* sticky headers / app bars */
+  --gl-z-dropdown: 1000; /* @kind other */  /* menus, combo-box overlay */
+  --gl-z-overlay:  2000; /* @kind other */  /* scrim behind modals/sheets */
+  --gl-z-modal:    3000; /* @kind other */  /* dialogs, bottom sheets */
+  --gl-z-toast:    4000; /* @kind other */  /* snackbars / toasts */
+  --gl-z-tooltip:  5000; /* @kind other */  /* tooltips — always on top */
+
+  /* ====================================================
+     RESPONSIVE — breakpoints (min-width)
+     ==================================================== */
+  --gl-bp-sm: 480px;    /* large phone */
+  --gl-bp-md: 768px;    /* tablet — tables may collapse to cards below this */
+  --gl-bp-lg: 1024px;   /* small desktop */
+  --gl-bp-xl: 1280px;   /* desktop content cap */
+
+  /* Layout */
+  --gl-content-max: 720px;   /* standard centered form column */
+  --gl-content-wide: 1120px; /* dashboards / master-template detail */
+  --gl-gutter: 24px;         /* grid column gap */
+}
+
+/* ====================================================
+   REDUCED MOTION — accessibility
+   Honour the OS setting: collapse all motion to near-instant
+   and disable the shimmer sweep.
+   ==================================================== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gl-dur-fast:     0ms; /* @kind other */
+    --gl-dur-base:     0ms; /* @kind other */
+    --gl-dur-moderate: 0ms; /* @kind other */
+    --gl-dur-slow:     0ms; /* @kind other */
+    --gl-stagger:      0ms; /* @kind other */
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

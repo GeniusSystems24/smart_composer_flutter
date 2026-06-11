@@ -1,0 +1,249 @@
+/* ============================================================
+   GeniusLink Design System — Foundations
+   Colors + Typography tokens, plus semantic vars and base styles.
+   ============================================================ */
+
+/* ---- Fonts (Google Fonts) ----
+   Manrope — display / headlines (ExtraBold, Bold, SemiBold)
+   Inter   — UI body, labels, breadcrumbs, tables
+   Noto Naskh Arabic — Arabic placeholders + content
+     (the Figma source used "FreeSerif" for Arabic which is a
+      pseudocode artifact — the real product likely uses an
+      Arabic-native face; Noto Naskh Arabic is the closest free
+      stand-in. FLAGGED for user confirmation.)
+   JetBrains Mono — code/IDs/serials/audit log monospace
+*/
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;900&family=Noto+Naskh+Arabic:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+:root {
+  /* ====================================================
+     CORE PALETTE  (sampled directly from Figma metadata)
+     ==================================================== */
+
+  /* Brand / Primary — electric royal blue, the single dominant accent */
+  --gl-blue-50:  #F0F2FF;   /* rgb(240,242,255)  — soft tint background */
+  --gl-blue-100: #DDE2F1;   /* rgb(221,226,241) — light text on dark, light hairlines */
+  --gl-blue-200: #ADC6FF;   /* rgb(173,198,255) — focused field tint */
+  --gl-blue-500: #4A7CFF;   /* rgb(74,124,255)  — PRIMARY brand blue */
+  --gl-blue-700: #005AC2;   /* rgb(0,90,194)    — pressed / link visited */
+
+  /* Section-marker accents — used as the 4×40px left bars on cards */
+  --gl-marker-blue:   #4A7CFF;  /* identity / primary section */
+  --gl-marker-green:  #1DB88A;  /* financial / balance / success state */
+  --gl-marker-orange: #F97316;  /* notes / compliance / informational */
+
+  /* Status — success */
+  --gl-success-500: #1DB88A;   /* rgb(29,184,138)  — ACTIVE / COMPLETED pill text */
+  --gl-success-100: #C9F1E1;   /* derived — pill background */
+
+  /* Status — danger */
+  --gl-danger-500:  #EF4444;   /* delete buttons, -5,000.00 amounts */
+  --gl-danger-100:  #FCE4E4;
+
+  /* Status — warning (matches marker-orange) */
+  --gl-warning-500: #F97316;
+
+  /* ====================================================
+     SURFACES — DARK THEME (Figma primary / dominant)
+     ==================================================== */
+  --gl-dark-bg:        #111318;   /* rgb(17,19,24)   — page background */
+  --gl-dark-surface:   #1A1B21;   /* rgb(26,27,33)   — secondary section */
+  --gl-dark-card:      #1E2025;   /* rgb(30,32,37)   — card / panel */
+  --gl-dark-card-2:    #292D38;   /* rgb(41,45,56)   — nested card */
+  --gl-dark-input:     #33353A;   /* rgb(51,53,58)   — input fill */
+  --gl-dark-hover:     #2F3540;   /* rgb(47,53,64)   — hover row */
+  --gl-dark-border:    rgba(67,70,84,0.4);   /* 1px hairline */
+  --gl-dark-border-strong: rgb(67,70,84);    /* solid divider */
+
+  --gl-dark-fg-1: #E2E2E9;   /* rgb(226,226,233) — primary text */
+  --gl-dark-fg-2: #C3C6D7;   /* rgb(195,198,215) — secondary / labels */
+  --gl-dark-fg-3: #8D90A0;   /* rgb(141,144,160) — tertiary / placeholder */
+  --gl-dark-fg-4: #44474E;   /* rgb(68,71,78)    — disabled / footer */
+
+  /* ====================================================
+     SURFACES — LIGHT THEME
+     ==================================================== */
+  --gl-light-bg:       #F7F8FA;   /* page background */
+  --gl-light-surface:  #FFFFFF;   /* card / panel */
+  --gl-light-input:    #F1F3F8;   /* input fill */
+  --gl-light-hover:    #EEF1F7;
+  --gl-light-border:   #E2E8F0;   /* rgb(226,232,240) */
+  --gl-light-border-strong: #C2C6D6; /* rgb(194,198,214) */
+
+  --gl-light-fg-1: #0F172A;   /* rgb(15,23,42)   — primary text (slate-900) */
+  --gl-light-fg-2: #424754;   /* rgb(66,71,84)   — secondary */
+  --gl-light-fg-3: #64748B;   /* rgb(100,116,139)— tertiary / placeholder */
+  --gl-light-fg-4: #C2C6D6;   /* disabled */
+
+  /* Cross-theme shadows (calibrated for dark dominance) */
+  --gl-shadow-card: 0 25px 50px -12px rgba(0,0,0,0.25);
+  --gl-shadow-card-light: 0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.12);
+  --gl-shadow-pop:  0 12px 32px -8px rgba(0,0,0,0.45);
+
+  /* ====================================================
+     RADII
+     ==================================================== */
+  --gl-radius-xs: 2px;    /* tag / micro */
+  --gl-radius-sm: 4px;    /* inputs / buttons */
+  --gl-radius-md: 6px;    /* small cards */
+  --gl-radius-lg: 8px;    /* CARDS (default) */
+  --gl-radius-xl: 12px;   /* large panels, status pill */
+  --gl-radius-pill: 999px;
+
+  /* ====================================================
+     SPACING — 4px base scale
+     ==================================================== */
+  --gl-space-1: 4px;
+  --gl-space-2: 8px;
+  --gl-space-3: 12px;
+  --gl-space-4: 16px;
+  --gl-space-5: 24px;
+  --gl-space-6: 32px;
+  --gl-space-7: 40px;
+  --gl-space-8: 64px;
+  --gl-space-9: 80px;
+
+  /* ====================================================
+     TYPOGRAPHY
+     ==================================================== */
+  --gl-font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gl-font-body:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gl-font-arabic:  "Noto Naskh Arabic", "Tajawal", "Geeza Pro", serif;
+  --gl-font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Type scale — base sizes from Figma usage frequency */
+  --gl-text-eyebrow-size: 11px;
+  --gl-text-eyebrow-tracking: 0.05em;        /* 0.55px @ 11px (form labels) */
+  --gl-text-eyebrow-tracking-loose: 0.15em;  /* 1.65px @ 11px (breadcrumbs) */
+
+  --gl-text-xs:  10px;
+  --gl-text-sm:  12px;
+  --gl-text-md:  14px;
+  --gl-text-lg:  16px;
+  --gl-text-xl:  18px;
+  --gl-text-2xl: 22px;
+  --gl-text-3xl: 26px;   /* H1 — Manrope Bold -0.65 tracking */
+  --gl-text-4xl: 30px;
+  --gl-text-5xl: 36px;
+
+  /* ====================================================
+     SEMANTIC ROLES (theme-agnostic; aliased by [data-theme])
+     ==================================================== */
+  --gl-bg:        var(--gl-dark-bg);
+  --gl-surface:   var(--gl-dark-card);
+  --gl-surface-2: var(--gl-dark-card-2);
+  --gl-input-bg:  var(--gl-dark-input);
+  --gl-hover:     var(--gl-dark-hover);
+  --gl-border:    var(--gl-dark-border);
+  --gl-border-strong: var(--gl-dark-border-strong);
+  --gl-fg-1: var(--gl-dark-fg-1);
+  --gl-fg-2: var(--gl-dark-fg-2);
+  --gl-fg-3: var(--gl-dark-fg-3);
+  --gl-fg-4: var(--gl-dark-fg-4);
+  --gl-shadow: var(--gl-shadow-card);
+}
+
+/* Light theme overlay */
+[data-theme="light"] {
+  --gl-bg:        var(--gl-light-bg);
+  --gl-surface:   var(--gl-light-surface);
+  --gl-surface-2: var(--gl-light-surface);
+  --gl-input-bg:  var(--gl-light-input);
+  --gl-hover:     var(--gl-light-hover);
+  --gl-border:    var(--gl-light-border);
+  --gl-border-strong: var(--gl-light-border-strong);
+  --gl-fg-1: var(--gl-light-fg-1);
+  --gl-fg-2: var(--gl-light-fg-2);
+  --gl-fg-3: var(--gl-light-fg-3);
+  --gl-fg-4: var(--gl-light-fg-4);
+  --gl-shadow: var(--gl-shadow-card-light);
+}
+
+/* ============================================================
+   ELEMENT BASELINES
+   ============================================================ */
+
+body, .gl-body {
+  font-family: var(--gl-font-body);
+  font-size: var(--gl-text-md);
+  line-height: 1.5;
+  color: var(--gl-fg-1);
+  background: var(--gl-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.gl-eyebrow {
+  font-family: var(--gl-font-body);
+  font-weight: 700;
+  font-size: var(--gl-text-eyebrow-size);
+  line-height: 1.5;
+  letter-spacing: var(--gl-text-eyebrow-tracking-loose);
+  text-transform: uppercase;
+  color: var(--gl-blue-500);
+}
+
+.gl-h1 {
+  font-family: var(--gl-font-display);
+  font-weight: 700;
+  font-size: var(--gl-text-3xl);   /* 26px */
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+  color: var(--gl-fg-1);
+  margin: 0;
+}
+
+.gl-h2 {
+  font-family: var(--gl-font-body);
+  font-weight: 700;
+  font-size: var(--gl-text-lg);    /* 16px */
+  line-height: 1.25;
+  color: var(--gl-fg-1);
+  margin: 0;
+}
+
+.gl-h3 {
+  font-family: var(--gl-font-body);
+  font-weight: 600;
+  font-size: var(--gl-text-md);
+  line-height: 1.4;
+  color: var(--gl-fg-1);
+  margin: 0;
+}
+
+.gl-body-text {
+  font-family: var(--gl-font-body);
+  font-size: var(--gl-text-md);
+  line-height: 1.5;
+  color: var(--gl-fg-2);
+}
+
+.gl-caption {
+  font-family: var(--gl-font-body);
+  font-size: var(--gl-text-sm);
+  line-height: 1.5;
+  color: var(--gl-fg-3);
+}
+
+.gl-label {
+  font-family: var(--gl-font-body);
+  font-weight: 700;
+  font-size: var(--gl-text-eyebrow-size);
+  line-height: 1.5;
+  letter-spacing: var(--gl-text-eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--gl-fg-2);
+}
+
+.gl-mono {
+  font-family: var(--gl-font-mono);
+  font-feature-settings: "tnum" 1;
+  font-size: var(--gl-text-md);
+  color: var(--gl-fg-1);
+}
+
+.gl-arabic {
+  font-family: var(--gl-font-arabic);
+  direction: rtl;
+  unicode-bidi: bidi-override;
+}

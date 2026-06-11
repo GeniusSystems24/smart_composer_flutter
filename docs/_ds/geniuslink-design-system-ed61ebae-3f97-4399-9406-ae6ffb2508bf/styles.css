@@ -1,0 +1,7 @@
+/* ============================================================
+   GeniusLink Design System — root stylesheet.
+   Single entry point for consumers: pulls in the full token
+   closure (design_system/tokens.css → colors_and_type.css)
+   so a consuming project links ONE file instead of several.
+   ============================================================ */
+@import url("./design_system/tokens.css");
