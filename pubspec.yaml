@@ -6,7 +6,7 @@ description: >-
   any custom type), with a human-readable encoded-text source of truth, a
   React-compatible parser, drag & drop, a read-only preview with remote
   resolution, modes, triggers, access postures, validation and theming.
-version: 1.0.0+1
+version: 1.0.0+2
 
 homepage: https://geniussystems24.github.io/smart_composer_flutter
 repository: https://github.com/GeniusSystems24/smart_composer_flutter
