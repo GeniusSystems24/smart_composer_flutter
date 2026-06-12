@@ -7,8 +7,28 @@ description: >-
   React-compatible parser, drag & drop, a read-only preview with remote
   resolution, modes, triggers, access postures, validation and theming.
 version: 1.0.0
-homepage: https://genius.link
-repository: https://example.com/smart_composer_flutter
+
+homepage: https://geniussystems24.github.io/smart_composer_flutter
+repository: https://github.com/GeniusSystems24/smart_composer_flutter
+issue_tracker: https://github.com/GeniusSystems24/smart_composer_flutter/issues
+documentation: https://github.com/GeniusSystems24/smart_composer_flutter/blob/main/skills/smart_composer_flutter.md
+
+topics:
+  - flutter
+  - composer
+  - rich-text
+  - references
+  - ai-input-field
+
+screenshots:
+  - description: Simple SmartComposer example.
+    path: snapshots/simple.png
+  - description: SmartComposer examples gallery.
+    path: snapshots/examples.png
+  - description: SmartComposer encode and decode screen.
+    path: snapshots/encode_decode.png
+  - description: SmartComposer drag and drop screen.
+    path: snapshots/drag_drop.png
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

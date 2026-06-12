@@ -1,5 +1,19 @@
 # smart_composer_flutter
 
+**Demo:** [geniussystems24.github.io/smart_composer_flutter](https://geniussystems24.github.io/smart_composer_flutter)
+
+**Skill guide:** [`skills/smart_composer_flutter.md`](skills/smart_composer_flutter.md)
+
+## Screenshots
+
+| Simple composer | Examples |
+|---|---|
+| [![Simple SmartComposer example](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots//simple.png)](https://geniussystems24.github.io/smart_composer_flutter) | [![SmartComposer examples screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots//examples.png)](https://geniussystems24.github.io/smart_composer_flutter) |
+
+| Encode / decode | Drag & drop |
+|---|---|
+| [![SmartComposer encode and decode screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots//encode_decode.png)](https://geniussystems24.github.io/smart_composer_flutter) | [![SmartComposer drag and drop screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots//drag_drop.png)](https://geniussystems24.github.io/smart_composer_flutter) |
+
 A reusable, entity-aware **rich composer for Flutter** — a faithful port of the
 GeniusLink **SmartComposer** React component.
 
@@ -188,3 +202,4 @@ A copy-paste agent skill describing how to use this package lives at
 ## License
 
 MIT © GeniusLink
+
