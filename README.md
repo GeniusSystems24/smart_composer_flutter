@@ -8,11 +8,11 @@
 
 | Simple composer | Examples |
 |---|---|
-| [![Simple SmartComposer example](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots/simple.png)](https://geniussystems24.github.io/smart_composer_flutter) | [![SmartComposer examples screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots/examples.png)](https://geniussystems24.github.io/smart_composer_flutter) |
+| [![Simple SmartComposer example](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/snapshots/simple.png)](https://geniussystems24.github.io/smart_composer_flutter) | [![SmartComposer examples screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/snapshots/examples.png)](https://geniussystems24.github.io/smart_composer_flutter) |
 
 | Encode / decode | Drag & drop |
 |---|---|
-| [![SmartComposer encode and decode screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots/encode_decode.png)](https://geniussystems24.github.io/smart_composer_flutter) | [![SmartComposer drag and drop screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/screenshots/drag_drop.png)](https://geniussystems24.github.io/smart_composer_flutter) |
+| [![SmartComposer encode and decode screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/snapshots/encode_decode.png)](https://geniussystems24.github.io/smart_composer_flutter) | [![SmartComposer drag and drop screen](https://raw.githubusercontent.com/GeniusSystems24/smart_composer_flutter/refs/heads/main/snapshots/drag_drop.png)](https://geniussystems24.github.io/smart_composer_flutter) |
 
 A reusable, entity-aware **rich composer for Flutter** — a faithful port of the
 GeniusLink **SmartComposer** React component.
